@@ -239,10 +239,7 @@ def parse_inp_string(inp_string):
             values.append(' '.join(v_lines))
     return u_name, command, keywords, values
 
-
-
-
-def get_doe2_object_blocks(inp_file):
+def doe2_object_blocks(inp_file):
     """
     Get the object blocks of a DOE-2 INP file.
 
@@ -280,13 +277,14 @@ def parse_inp_file(inp_file_path):
         inp_file_path: A path to the INP file to parse.
 
     Returns:
-        A dictionary {command: {u_name: {key: value}}}
+        A dictionary {command: {u_name: {key: value, "__line__": line_number}}}
     """
 
     inp_file = clean_inp_file_contents(inp_file_path)
-    blocks = get_doe2_object_blocks(inp_file)
+    blocks = doe2_object_blocks(inp_file)
     global_parameters = {}
     non_parameter_blocks = []
+    block_line_count = 1
 
     # Get globals first since they are formatted slightly differently
     for blk in blocks:
@@ -314,6 +312,9 @@ def parse_inp_file(inp_file_path):
                 attr_d[k] = float(v)
             except ValueError:
                 attr_d[k] = v
+        # Add line number for future child/parent relationships determination
+        attr_d["__line__"] = block_line_count
+        block_line_count += 1
         result[cmd][u_name] = attr_d
 
     if global_parameters:
@@ -321,6 +322,10 @@ def parse_inp_file(inp_file_path):
 
     return dict(result)
 
+
+
+
+  
 
 
 def header_comment_minor(header_text):
@@ -372,52 +377,4 @@ def switch_statement_id(value):
         return val[-4:]
     return val
 
-def get_inp_path_from_folder(folder_path=None, filename=None):
-    """
-    Get the path to an INP file from a specified folder or the current directory.
-    
-    Args:
-        folder_path: Path to the folder containing the INP file. If None, uses current directory.
-        filename: Name of the INP file. If None, looks for any .inp file in the folder.
-        
-    Returns:
-        Path to the INP file.
-        
-    Raises:
-        FileNotFoundError: If no INP file is found.
-    """
-    if folder_path is None:
-        folder_path = Path.cwd()
-    else:
-        folder_path = Path(folder_path)
-    
-    if filename is None:
-        # Look for any .inp file in the folder
-        inp_files = list(folder_path.glob("*.inp"))
-        if not inp_files:
-            raise FileNotFoundError(f"No .inp files found in {folder_path}")
-        if len(inp_files) > 1:
-            # If multiple INP files, use the first one (you might want to be more specific)
-            print(f"Multiple .inp files found, using: {inp_files[0]}")
-        return inp_files[0]
-    else:
-        # Use the specified filename
-        inp_path = folder_path / filename
-        if not inp_path.exists():
-            raise FileNotFoundError(f"INP file not found: {inp_path}")
-        return inp_path
 
-
-def load_inp_from_same_folder(filename=None):
-    """
-    Load an INP file from the same folder as the current script.
-    
-    Args:
-        filename: Name of the INP file. If None, looks for any .inp file.
-        
-    Returns:
-        Path to the INP file.
-    """
-    # Get the directory where the current script is located
-    script_dir = Path(__file__).parent
-    return get_inp_path_from_folder(script_dir, filename)

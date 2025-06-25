@@ -1,7 +1,8 @@
 """Test the utility functions."""
 import os
+import pprint
 
-from honeybee_doe2.util import parse_inp_string, parse_inp_file
+from honeybee_doe2.util import parse_inp_string, parse_inp_file, child_objects_from_parent
 
 
 
@@ -161,5 +162,3 @@ def test_parse_inp_file():
     assert isinstance(space_obj, dict)
 
 
-inp_file_path = os.path.join(os.path.dirname(__file__), 'assets', 'test_project.inp')
-inp_object_dict = parse_inp_file(inp_file_path)
